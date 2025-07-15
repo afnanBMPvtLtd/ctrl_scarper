@@ -168,6 +168,16 @@
     a:hover {
       text-decoration: underline;
     }
+
+    #spinner {
+      display: none;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    #spinner img {
+      height: 60px;
+    }
   </style>
 </head>
 <body>
@@ -176,6 +186,11 @@
 
     <div class="theme-toggle">
       <button onclick="toggleTheme()">🌗 Toggle Dark Mode</button>
+    </div>
+
+    <div id="spinner">
+      <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading...">
+      <p>Please wait, scraping in progress...</p>
     </div>
 
     <form method="post">
@@ -206,53 +221,37 @@
 
       <div class="section">
         <h2>Sentiment Analysis</h2>
-        <div class="sentiment-box" style="
-          border-left-color: 
-            {% if data.polarity_score >= 0.6 %}
-              limegreen
-            {% elif data.polarity_score >= 0.2 %}
-              lightgreen
-            {% elif data.polarity_score > -0.2 %}
-              gray
-            {% elif data.polarity_score > -0.6 %}
-              orange
-            {% else %}
-              red
-            {% endif %};
-        ">
+        <div class="sentiment-box" style="border-left-color: 
+          {% if data.polarity_score >= 0.6 %}limegreen
+          {% elif data.polarity_score >= 0.2 %}lightgreen
+          {% elif data.polarity_score > -0.2 %}gray
+          {% elif data.polarity_score > -0.6 %}orange
+          {% else %}red{% endif %};">
           <p><strong>Sentiment:</strong> {{ data.sentiment }}</p>
           <p><strong>Polarity Score:</strong> {{ data.polarity_score|floatformat:2 }}</p>
         </div>
-
         <div class="polarity-bar">
           <div class="polarity-fill" style="
             width: {{ data.polarity_score|add:'1'|floatformat:2|floatformat:2|floatformat:2 }}00%;
             background-color:
-              {% if data.polarity_score >= 0.6 %}
-                limegreen
-              {% elif data.polarity_score >= 0.2 %}
-                lightgreen
-              {% elif data.polarity_score > -0.2 %}
-                gray
-              {% elif data.polarity_score > -0.6 %}
-                orange
-              {% else %}
-                red
-              {% endif %};
-          "></div>
+              {% if data.polarity_score >= 0.6 %}limegreen
+              {% elif data.polarity_score >= 0.2 %}lightgreen
+              {% elif data.polarity_score > -0.2 %}gray
+              {% elif data.polarity_score > -0.6 %}orange
+              {% else %}red{% endif %};"></div>
         </div>
       </div>
-      <div class="section">
-  <h2>Top Keywords (AI Extracted)</h2>
-  <ul>
-    {% for word in data.keywords_ai %}
-      <li>{{ word }}</li>
-    {% empty %}
-      <li>No keywords extracted.</li>
-    {% endfor %}
-  </ul>
-</div>
 
+      <div class="section">
+        <h2>Top Keywords (AI Extracted)</h2>
+        <ul>
+          {% for word in data.keywords_ai %}
+            <li>{{ word }}</li>
+          {% empty %}
+            <li>No keywords extracted.</li>
+          {% endfor %}
+        </ul>
+      </div>
 
       <div class="section">
         <h2>Links</h2>
@@ -288,7 +287,13 @@
         document.body.classList.add('dark');
       }
     };
-</script>
 
+    const form = document.querySelector("form");
+    const spinner = document.getElementById("spinner");
+
+    form.addEventListener("submit", function () {
+      spinner.style.display = "block";
+    });
+  </script>
 </body>
 </html>
