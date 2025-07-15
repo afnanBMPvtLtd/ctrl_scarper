@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CTRL Scrapper</title>
+  <style>
+    :root {
+      --bg-color: #f9f9f9;
+      --card-color: #ffffff;
+      --text-color: #1a1a1a;
+      --accent: #007bff;
+      --button-bg: #007bff;
+      --button-hover: #0056b3;
+      --input-bg: #f0f0f0;
+    }
+
+    body.dark {
+      --bg-color: #121212;
+      --card-color: #1e1e1e;
+      --text-color: #f1f1f1;
+      --accent: #00bcd4;
+      --button-bg: #00bcd4;
+      --button-hover: #0097a7;
+      --input-bg: #2b2b2b;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 40px;
+      transition: all 0.3s ease;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: auto;
+      background-color: var(--card-color);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 36px;
+      color: var(--accent);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .theme-toggle {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .theme-toggle button {
+      background-color: var(--button-bg);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-size: 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .theme-toggle button:hover {
+      background-color: var(--button-hover);
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+
+    input[type="url"] {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+    }
+
+    button[type="submit"] {
+      background-color: var(--button-bg);
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button[type="submit"]:hover {
+      background-color: var(--button-hover);
+    }
+
+    .section {
+      margin-top: 30px;
+    }
+
+    .section h2 {
+      font-size: 22px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+    }
+
+    .section p,
+    .section ul {
+      font-size: 16px;
+    }
+
+    .section ul {
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+
+    .section img {
+      max-width: 100%;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .sentiment-box {
+      background: var(--input-bg);
+      border-left: 5px solid var(--accent);
+      padding: 12px 18px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .polarity-bar {
+      height: 12px;
+      width: 100%;
+      background: #444;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .polarity-fill {
+      height: 100%;
+      transition: width 0.5s ease;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CTRL Scrapper</h1>
+
+    <div class="theme-toggle">
+      <button onclick="toggleTheme()">🌗 Toggle Dark Mode</button>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.url }}
+      <button type="submit">Scrape</button>
+    </form>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if data %}
+      <div class="section">
+        <h2>Website Title</h2>
+        <p>{{ data.title }}</p>
+      </div>
+
+      <div class="section">
+        <h2>Meta Description</h2>
+        <p>{{ data.meta_description }}</p>
+      </div>
+
+      <div class="section">
+        <h2>Meta Keywords</h2>
+        <p>{{ data.meta_keywords }}</p>
+      </div>
+
+      <div class="section">
+        <h2>Sentiment Analysis</h2>
+        <div class="sentiment-box" style="
+          border-left-color: 
+            {% if data.polarity_score >= 0.6 %}
+              limegreen
+            {% elif data.polarity_score >= 0.2 %}
+              lightgreen
+            {% elif data.polarity_score > -0.2 %}
+              gray
+            {% elif data.polarity_score > -0.6 %}
+              orange
+            {% else %}
+              red
+            {% endif %};
+        ">
+          <p><strong>Sentiment:</strong> {{ data.sentiment }}</p>
+          <p><strong>Polarity Score:</strong> {{ data.polarity_score|floatformat:2 }}</p>
+        </div>
+
+        <div class="polarity-bar">
+          <div class="polarity-fill" style="
+            width: {{ data.polarity_score|add:'1'|floatformat:2|floatformat:2|floatformat:2 }}00%;
+            background-color:
+              {% if data.polarity_score >= 0.6 %}
+                limegreen
+              {% elif data.polarity_score >= 0.2 %}
+                lightgreen
+              {% elif data.polarity_score > -0.2 %}
+                gray
+              {% elif data.polarity_score > -0.6 %}
+                orange
+              {% else %}
+                red
+              {% endif %};
+          "></div>
+        </div>
+      </div>
+      <div class="section">
+  <h2>Top Keywords (AI Extracted)</h2>
+  <ul>
+    {% for word in data.keywords_ai %}
+      <li>{{ word }}</li>
+    {% empty %}
+      <li>No keywords extracted.</li>
+    {% endfor %}
+  </ul>
+</div>
+
+
+      <div class="section">
+        <h2>Links</h2>
+        <ul>
+          {% for link in data.links %}
+            <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="section">
+        <h2>Images</h2>
+        {% for img in data.images %}
+          <img src="{{ img }}" alt="Image">
+        {% empty %}
+          <p>No images found.</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      const theme = body.classList.contains('dark') ? 'light' : 'dark';
+      body.classList.toggle('dark');
+      localStorage.setItem('theme', theme);
+    }
+
+    window.onload = () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark');
+      }
+    };
+</script>
+
+</body>
+</html>
