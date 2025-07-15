@@ -8,6 +8,22 @@ from urllib.parse import urljoin
 import re
 from collections import Counter
 import time
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+
+def categorize_content(text):
+    text = text.lower()
+    if "stock" in text or "investment" in text or "share price" in text:
+        return "Finance"
+    elif "health" in text or "medicine" in text or "disease" in text:
+        return "Health"
+    elif "university" in text or "college" in text:
+        return "Education"
+    elif "software" in text or "programming" in text or "ai" in text:
+        return "Technology"
+    else:
+        return "Other"
 
 def scrape_view(request):
     data = {}
@@ -24,12 +40,12 @@ def scrape_view(request):
             while attempt < max_attempts:
                 try:
                     response = requests.get(url, timeout=20)
-                    break  # Exit loop on success
+                    break
                 except requests.exceptions.Timeout:
                     attempt += 1
                     print(f"[Attempt {attempt}] Timeout occurred for URL: {url}")
                     if attempt < max_attempts:
-                        time.sleep(1)  # brief pause before retry
+                        time.sleep(1)
                 except Exception as e:
                     error = f"An error occurred while fetching the URL: {e}"
                     print(f"[Error] {e}")
@@ -39,7 +55,6 @@ def scrape_view(request):
                 try:
                     soup = BeautifulSoup(response.text, 'html.parser')
 
-                    # Extract data
                     title = soup.title.string.strip() if soup.title else 'No title found'
                     links = [link['href'] for link in soup.find_all('a', href=True)]
                     images = [urljoin(url, img['src']) for img in soup.find_all('img', src=True)]
@@ -49,8 +64,16 @@ def scrape_view(request):
                     description = meta_desc['content'] if meta_desc else 'No description'
                     keywords = meta_keywords['content'] if meta_keywords else 'No keywords'
 
-                    # Sentiment Analysis
                     content = soup.get_text()
+
+                    # Run NER here
+                    doc = nlp(content)
+                    entities = [(ent.text, ent.label_) for ent in doc.ents]
+
+                    # Categorize content
+                    category = categorize_content(content)
+
+                    # Sentiment Analysis
                     blob = TextBlob(content)
                     polarity = blob.sentiment.polarity
 
@@ -65,12 +88,10 @@ def scrape_view(request):
                     else:
                         sentiment = "Very Negative 😠"
 
-                    # Keyword Extraction
                     words = re.findall(r'\b\w{5,}\b', content.lower())
                     common_words = Counter(words).most_common(10)
                     keywords_ai = [word for word, _ in common_words]
 
-                    # Save to DB
                     ScrapedResult.objects.create(
                         url=url,
                         title=title,
@@ -80,7 +101,6 @@ def scrape_view(request):
                         images=",".join(images)
                     )
 
-                    # Prepare data for template
                     data = {
                         'title': title,
                         'links': links,
@@ -90,6 +110,8 @@ def scrape_view(request):
                         'sentiment': sentiment,
                         'polarity_score': polarity,
                         'keywords_ai': keywords_ai,
+                        'entities': entities,
+                        'category': category,
                     }
 
                 except Exception as e:

@@ -160,6 +160,28 @@
       transition: width 0.5s ease;
     }
 
+    .ner-label {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 8px;
+      color: white;
+    }
+
+    .ner-label.person { background-color: #007bff; }
+    .ner-label.org { background-color: #28a745; }
+    .ner-label.gpe { background-color: #ffc107; }
+    .ner-label.date { background-color: #17a2b8; }
+    .ner-label.time { background-color: #6f42c1; }
+    .ner-label.norp { background-color: #dc3545; }
+    .ner-label.event { background-color: #20c997; }
+    .ner-label.fac { background-color: #fd7e14; }
+    .ner-label.loc { background-color: #6610f2; }
+    .ner-label.product { background-color: #e83e8c; }
+    .ner-label.language { background-color: #343a40; }
+
     a {
       color: var(--accent);
       text-decoration: none;
@@ -232,7 +254,7 @@
         </div>
         <div class="polarity-bar">
           <div class="polarity-fill" style="
-            width: {{ data.polarity_score|add:'1'|floatformat:2|floatformat:2|floatformat:2 }}00%;
+            width: {{ data.polarity_score|add:'1'|floatformat:2 }}00%;
             background-color:
               {% if data.polarity_score >= 0.6 %}limegreen
               {% elif data.polarity_score >= 0.2 %}lightgreen
@@ -252,6 +274,42 @@
           {% endfor %}
         </ul>
       </div>
+
+      <div class="section">
+        <h2>Content Category</h2>
+        <p>{{ data.category }}</p>
+      </div>
+
+      <div class="section">
+        <h2>Named Entities</h2>
+        <ul>
+          {% for entity, label in data.entities %}
+            <li><strong>{{ entity }}</strong>
+              <span class="ner-label {{ label|lower }}">{{ label }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+            <div class="section">
+  <details>
+    <summary style="cursor: pointer; font-weight: bold; color: var(--accent); font-size: 18px; margin-top: 20px;">
+      ℹ️ What do NER tags like GPE, ORG, PERSON mean?
+    </summary>
+    <ul style="margin-top: 10px; line-height: 1.6;">
+      <li><strong>PERSON</strong> — People, including fictional.</li>
+      <li><strong>ORG</strong> — Organizations, companies, institutions.</li>
+      <li><strong>GPE</strong> — Countries, cities, states (Geopolitical entities).</li>
+      <li><strong>LOC</strong> — Non-GPE locations, mountain ranges, bodies of water.</li>
+      <li><strong>PRODUCT</strong> — Objects, vehicles, foods, tools, etc.</li>
+      <li><strong>DATE</strong> — Absolute or relative dates.</li>
+      <li><strong>TIME</strong> — Times smaller than a day.</li>
+      <li><strong>WORK_OF_ART</strong> — Titles of books, songs, movies, etc.</li>
+      <li><strong>NORP</strong> — Nationalities, religious or political groups.</li>
+      <li><strong>CARDINAL</strong> — Numerals that do not fall under other categories.</li>
+      <li><strong>LANGUAGE</strong> — Named languages (e.g., English, Hindi).</li>
+    </ul>
+  </details>
+</div>
 
       <div class="section">
         <h2>Links</h2>
